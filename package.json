@@ -1,0 +1,32 @@
+{
+  "name": "claude-git-agent-cli",
+  "version": "0.1.0",
+  "description": "A Claude Agent SDK powered CLI for natural-language Git operations.",
+  "type": "module",
+  "bin": {
+    "git-agent": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.123",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.2",
+    "execa": "^9.6.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsup": "^8.5.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.14"
+  }
+}
