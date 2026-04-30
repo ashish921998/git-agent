@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import ora from "ora";
 import { createAgentPlan } from "./agent.js";
 import { shouldRunPlan } from "./confirm.js";
 import { executeCommand } from "./executor.js";
@@ -37,7 +38,15 @@ async function main(): Promise<void> {
   const folder = await validateFolder(rawOptions.folder);
   const options: CliOptions = { ...rawOptions, folder };
   const repoState = await inspectRepo(folder);
-  const plan = await createAgentPlan(request, repoState);
+  const planningSpinner = options.json ? null : ora("Asking Claude to plan the Git operations...").start();
+  let plan;
+  try {
+    plan = await createAgentPlan(request, repoState);
+    planningSpinner?.succeed("Claude returned a command plan.");
+  } catch (error) {
+    planningSpinner?.fail("Claude could not create a command plan.");
+    throw error;
+  }
   const assessments = plan.commands.map((command) => assessCommand(command, folder));
 
   printPlan(plan, assessments, options.json);
@@ -85,7 +94,13 @@ async function main(): Promise<void> {
 
   for (const [index, command] of plan.commands.entries()) {
     const assessment = assessments[index];
+    const execSpinner = options.json ? null : ora(`Running ${[command.command, ...command.args].join(" ")}...`).start();
     const entry = await executeCommand(folder, command, assessment?.risk ?? "refused", options.verbose);
+    if (entry.status === "ok") {
+      execSpinner?.succeed(`Finished ${[command.command, ...command.args].join(" ")}.`);
+    } else {
+      execSpinner?.fail(`Failed ${[command.command, ...command.args].join(" ")}.`);
+    }
     printLog(entry, options.json);
     if (entry.status === "error") {
       for (let skippedIndex = index + 1; skippedIndex < plan.commands.length; skippedIndex += 1) {
