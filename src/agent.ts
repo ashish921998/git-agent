@@ -1,4 +1,5 @@
-import { query } from "@anthropic-ai/claude-agent-sdk";
+import { anthropic } from "@ai-sdk/anthropic";
+import { generateObject } from "ai";
 import { z } from "zod";
 import type { AgentPlan, RepoState } from "./types.js";
 
@@ -15,45 +16,17 @@ const planSchema = z.object({
 
 export async function createAgentPlan(request: string, repoState: RepoState): Promise<AgentPlan> {
   const prompt = buildPrompt(request, repoState);
-  let resultText = "";
-
-  for await (const message of query({
+  const result = await generateObject({
+    model: anthropic("claude-haiku-4-5-20251001"),
+    schema: planSchema,
     prompt,
-    options: {
-      cwd: repoState.folder,
-      tools: [],
-      maxTurns: 1,
-      permissionMode: "plan",
-      env: {
-        ...process.env,
-        CLAUDE_AGENT_SDK_CLIENT_APP: "claude-git-agent-cli/0.1.0",
-      },
-    },
-  })) {
-    if (message.type === "result" && message.subtype === "success") {
-      resultText = message.result;
-    }
-  }
+  });
 
-  if (!resultText) {
-    throw new Error("Claude did not return a plan.");
-  }
-
-  return parsePlan(resultText);
+  return result.object;
 }
 
 function buildPrompt(request: string, repoState: RepoState): string {
-  return `You are a Git operations planning agent.
-
-Return only JSON. Do not include markdown fences or commentary.
-
-The JSON must match this TypeScript type:
-{
-  "summary": string,
-  "commands": [
-    { "command": string, "args": string[], "reason": string }
-  ]
-}
+  return `You are a Git operations planning agent. Return a structured command plan.
 
 Rules:
 - The user speaks in natural language. Convert the request into a small command plan.

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import "dotenv/config";
 import { Command } from "commander";
 import ora from "ora";
 import { createAgentPlan } from "./agent.js";
@@ -13,7 +14,7 @@ async function main(): Promise<void> {
   const program = new Command();
   program
     .name("git-agent")
-    .description("Natural-language Git operations powered by Claude Agent SDK")
+    .description("Natural-language Git operations powered by Vercel AI SDK")
     .option("--folder <path>", "target folder", process.cwd())
     .option("--yes", "approve normal mutating Git commands", false)
     .option("--dry-run", "show plan without running commands", false)
@@ -38,13 +39,13 @@ async function main(): Promise<void> {
   const folder = await validateFolder(rawOptions.folder);
   const options: CliOptions = { ...rawOptions, folder };
   const repoState = await inspectRepo(folder);
-  const planningSpinner = options.json ? null : ora("Asking Claude to plan the Git operations...").start();
+  const planningSpinner = options.json ? null : ora("Asking the agent to plan the Git operations...").start();
   let plan;
   try {
     plan = await createAgentPlan(request, repoState);
-    planningSpinner?.succeed("Claude returned a command plan.");
+    planningSpinner?.succeed("Agent returned a command plan.");
   } catch (error) {
-    planningSpinner?.fail("Claude could not create a command plan.");
+    planningSpinner?.fail("Agent could not create a command plan.");
     throw error;
   }
   const assessments = plan.commands.map((command) => assessCommand(command, folder));

@@ -1,6 +1,6 @@
-# Claude Git Agent CLI
+# Vercel AI Git Agent CLI
 
-A TypeScript CLI agent that turns natural-language Git requests into guarded command plans. It uses the Claude Agent SDK for planning, then runs only locally allowed commands inside the target folder.
+A TypeScript CLI agent that turns natural-language Git requests into guarded command plans. It uses Vercel AI SDK with Anthropic Claude for planning, then runs only locally allowed commands inside the target folder.
 
 ## Setup
 

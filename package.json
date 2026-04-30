@@ -1,7 +1,7 @@
 {
-  "name": "claude-git-agent-cli",
+  "name": "vercel-ai-git-agent-cli",
   "version": "0.1.0",
-  "description": "A Claude Agent SDK powered CLI for natural-language Git operations.",
+  "description": "A Vercel AI SDK powered CLI for natural-language Git operations.",
   "type": "module",
   "bin": {
     "git-agent": "./dist/index.js"
@@ -16,9 +16,11 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.123",
+    "@ai-sdk/anthropic": "^3.0.72",
+    "ai": "^6.0.170",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
+    "dotenv": "^17.4.2",
     "execa": "^9.6.0",
     "ora": "^9.0.0",
     "zod": "^4.1.12"
