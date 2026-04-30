@@ -73,6 +73,10 @@ User request:
 ${request}`;
 }
 
+export function parsePlanForTest(raw: string): AgentPlan {
+  return parsePlan(raw);
+}
+
 function parsePlan(raw: string): AgentPlan {
   const errors: string[] = [];
   try {
