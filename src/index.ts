@@ -38,7 +38,7 @@ async function main(): Promise<void> {
   const options: CliOptions = { ...rawOptions, folder };
   const repoState = await inspectRepo(folder);
   const plan = await createAgentPlan(request, repoState);
-  const assessments = plan.commands.map(assessCommand);
+  const assessments = plan.commands.map((command) => assessCommand(command, folder));
 
   printPlan(plan, assessments, options.json);
 

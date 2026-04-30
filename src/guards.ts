@@ -1,4 +1,5 @@
 import type { AgentCommand, CommandAssessment } from "./types.js";
+import { resolve } from "node:path";
 
 const READONLY_SHELL = new Set(["pwd", "ls", "find", "cat", "head", "sed"]);
 const GIT_READONLY = new Set([
@@ -44,7 +45,7 @@ const DISALLOWED_SHELL = new Set([
   "chown",
 ]);
 
-export function assessCommand(command: AgentCommand): CommandAssessment {
+export function assessCommand(command: AgentCommand, targetFolder = process.cwd()): CommandAssessment {
   const executable = command.command.trim();
   const args = command.args ?? [];
 
@@ -65,7 +66,7 @@ export function assessCommand(command: AgentCommand): CommandAssessment {
   }
 
   if (READONLY_SHELL.has(executable)) {
-    return assessReadonlyShell(executable, args);
+    return assessReadonlyShell(executable, args, targetFolder);
   }
 
   if (DISALLOWED_SHELL.has(executable)) {
@@ -184,7 +185,7 @@ function assessGit(args: string[]): CommandAssessment {
   };
 }
 
-function assessReadonlyShell(command: string, args: string[]): CommandAssessment {
+function assessReadonlyShell(command: string, args: string[], targetFolder: string): CommandAssessment {
   if (command === "sed" && args.some((arg) => arg === "-i" || arg.startsWith("-i"))) {
     return {
       risk: "refused",
@@ -193,7 +194,7 @@ function assessReadonlyShell(command: string, args: string[]): CommandAssessment
     };
   }
 
-  if (args.some((arg) => arg.startsWith("/") || arg.includes(".."))) {
+  if (args.some((arg) => looksLikeEscapingPath(arg, targetFolder))) {
     return {
       risk: "refused",
       allowed: false,
@@ -210,6 +211,24 @@ function assessReadonlyShell(command: string, args: string[]): CommandAssessment
   }
 
   return { risk: "readonly", allowed: true };
+}
+
+function looksLikeEscapingPath(arg: string, targetFolder: string): boolean {
+  if (arg.startsWith("-")) {
+    return false;
+  }
+
+  if (arg === "." || arg === "./") {
+    return false;
+  }
+
+  if (!arg.startsWith("/") && !arg.includes("..")) {
+    return false;
+  }
+
+  const base = resolve(targetFolder);
+  const resolved = resolve(base, arg);
+  return resolved !== base && !resolved.startsWith(`${base}/`);
 }
 
 function containsShellSyntax(value: string): boolean {

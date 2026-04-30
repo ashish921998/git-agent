@@ -26,11 +26,13 @@ describe("assessCommand", () => {
   it("allows small read-only inspection commands", () => {
     expect(assessCommand({ command: "ls", args: ["-la"], reason: "list" }).risk).toBe("readonly");
     expect(assessCommand({ command: "find", args: [".", "-maxdepth", "2", "-type", "f"], reason: "find" }).risk).toBe("readonly");
+    expect(assessCommand({ command: "ls", args: ["-la", "/tmp/repo"], reason: "list" }, "/tmp/repo").risk).toBe("readonly");
   });
 
   it("refuses arbitrary and mutating shell commands", () => {
     expect(assessCommand({ command: "rm", args: ["-rf", "."], reason: "delete" }).allowed).toBe(false);
     expect(assessCommand({ command: "npm", args: ["install"], reason: "install" }).allowed).toBe(false);
+    expect(assessCommand({ command: "cat", args: ["../secret"], reason: "escape" }, "/tmp/repo").allowed).toBe(false);
   });
 
   it("refuses shell syntax", () => {
